@@ -21,7 +21,7 @@ function Home() {
 
           {/* Punchy Human-written Subtitle */}
           <p className="text-sm sm:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed max-w-xl">
-            Full-Stack Web & Mobile Developer. Bikin aplikasi web pakai Laravel/React dan mobile pakai Flutter. Fokus ke fungsi, arsitektur rapi, dan hasil nyata—bukan sekadar tampilan manis.
+            Hallo namaku Kevin, seorang Full-Stack Web & Mobile Developer. Aku terbiasa bikin aplikasi web pakai Laravel/React dan mobile pakai Flutter. Dalam setiap proyek, aku selalu fokus ke fungsi, arsitektur rapi, dan hasil nyata—bukan sekadar tampilan manis.
           </p>
 
           {/* CTA Buttons */}

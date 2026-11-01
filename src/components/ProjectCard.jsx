@@ -49,12 +49,12 @@ function ProjectCard({ project }) {
         </div>
 
         {/* Project Name */}
-        <h3 className="font-mono text-base font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
+        <h3 className="font-mono text-base font-bold tracking-tight text-zinc-950 dark:text-zinc-50 break-words">
           <a
             href={html_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:underline underline-offset-4 decoration-2 focus:outline-hidden"
+            className="hover:underline underline-offset-4 decoration-2 focus:outline-hidden break-words"
           >
             {name}
           </a>

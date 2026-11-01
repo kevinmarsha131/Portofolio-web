@@ -1,11 +1,48 @@
+import { useState, useMemo } from 'react'
 import useGitHubProjects from '../hooks/useGitHubProjects'
 import ProjectCard from '../components/ProjectCard'
 
 function Projects() {
   const { projects, loading, error, refetch } = useGitHubProjects()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedLanguage, setSelectedLanguage] = useState('ALL')
+
+  // Ekstrak daftar bahasa pemrograman yang unik dari data repository
+  const availableLanguages = useMemo(() => {
+    const langs = new Set()
+    projects.forEach((repo) => {
+      if (repo.language) {
+        langs.add(repo.language)
+      }
+    })
+    return ['ALL', ...Array.from(langs).sort()]
+  }, [projects])
+
+  // Filter repositori berdasarkan teks pencarian dan pilihan bahasa
+  const filteredProjects = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim()
+
+    return projects.filter((project) => {
+      const matchSearch =
+        !query ||
+        project.name.toLowerCase().includes(query) ||
+        (project.description && project.description.toLowerCase().includes(query)) ||
+        (project.topics && project.topics.some((t) => t.toLowerCase().includes(query)))
+
+      const matchLang =
+        selectedLanguage === 'ALL' || project.language === selectedLanguage
+
+      return matchSearch && matchLang
+    })
+  }, [projects, searchQuery, selectedLanguage])
+
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setSelectedLanguage('ALL')
+  }
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-8">
       {/* Page Header */}
       <div>
         <div className="flex flex-wrap items-baseline gap-4">
@@ -22,6 +59,64 @@ function Projects() {
           // REPOSITORI PUBLIK LANGSUNG DARI GITHUB API
         </p>
       </div>
+
+      {/* Search & Filter Toolbar (Hanya muncul jika data berhasil dimuat) */}
+      {!loading && !error && projects.length > 0 && (
+        <div className="border-2 border-zinc-950 dark:border-zinc-50 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-[4px_4px_0_0_currentColor] space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari nama proyek, deskripsi, atau topic..."
+                className="w-full px-3.5 py-2 border-2 border-zinc-950 dark:border-zinc-50 bg-zinc-50 dark:bg-zinc-950 font-mono text-xs sm:text-sm text-zinc-950 dark:text-zinc-50 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-hidden focus:bg-white dark:focus:bg-zinc-900 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-xs text-zinc-500 hover:text-zinc-950 dark:hover:text-zinc-50 px-1"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Counter */}
+            <div className="font-mono text-xs text-zinc-600 dark:text-zinc-400 whitespace-nowrap self-end sm:self-center">
+              SHOWING {filteredProjects.length} OF {projects.length}
+            </div>
+          </div>
+
+          {/* Quick Language Filter Pills */}
+          {availableLanguages.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              <span className="font-mono text-[11px] font-bold text-zinc-500 mr-1">
+                FILTER:
+              </span>
+              {availableLanguages.map((lang) => {
+                const isActive = selectedLanguage === lang
+                return (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setSelectedLanguage(lang)}
+                    className={`font-mono text-xs font-bold px-2.5 py-0.5 border-2 transition-all cursor-pointer ${
+                      isActive
+                        ? 'border-zinc-950 dark:border-zinc-50 bg-zinc-950 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-950 shadow-[2px_2px_0_0_currentColor]'
+                        : 'border-zinc-400 dark:border-zinc-700 bg-transparent text-zinc-700 dark:text-zinc-300 hover:border-zinc-950 dark:hover:border-zinc-50'
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Loading State: Neo-Brutalist Skeletons */}
       {loading && (
@@ -69,17 +164,36 @@ function Projects() {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State: Tidak ada repo sama sekali dari API */}
       {!loading && !error && projects.length === 0 && (
         <div className="border-2 border-zinc-950 dark:border-zinc-50 bg-white dark:bg-zinc-900 p-8 text-center max-w-md mx-auto shadow-[4px_4px_0_0_currentColor] font-mono text-xs">
           [!] BELUM ADA REPOSITORI PUBLIK DITEMUKAN.
         </div>
       )}
 
+      {/* Empty State: Hasil Filter Kosong */}
+      {!loading && !error && projects.length > 0 && filteredProjects.length === 0 && (
+        <div className="border-2 border-zinc-950 dark:border-zinc-50 bg-white dark:bg-zinc-900 p-8 text-center max-w-md mx-auto shadow-[4px_4px_0_0_currentColor] font-mono text-xs space-y-3">
+          <p className="font-bold text-zinc-900 dark:text-zinc-100">
+            [!] TIDAK ADA PROYEK YANG SESUAI DENGAN FILTER.
+          </p>
+          <p className="text-zinc-500">
+            Coba kata kunci lain atau reset filter bahasa.
+          </p>
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="inline-flex items-center gap-1 border-2 border-zinc-950 dark:border-zinc-50 bg-zinc-950 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-950 px-3 py-1 font-bold uppercase shadow-[2px_2px_0_0_currentColor] cursor-pointer"
+          >
+            RESET FILTER
+          </button>
+        </div>
+      )}
+
       {/* Projects Grid */}
-      {!loading && !error && projects.length > 0 && (
+      {!loading && !error && filteredProjects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <ProjectCard key={project.id || project.name} project={project} />
           ))}
         </div>
